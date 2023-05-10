@@ -221,6 +221,13 @@
               </spacer>
              </item>
              <item>
+              <widget class="QPushButton" name="button_file_preview">
+               <property name="text">
+                <string>File preview</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="button_select_same">
                <property name="text">
                 <string>Select same directory</string>

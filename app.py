@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QFileDialog, QInputDialog, QDialog, QDialogButton
                                QLineEdit, QAbstractItemView, QVBoxLayout, QListWidget, QLabel, QWidget, QApplication,
                                QMainWindow)
 from PySide6.QtCore import (Qt, QRunnable, Signal, Slot, QThreadPool, QObject)
+from PySide6.QtGui import QImage, QPixmap, QImageReader
 
 from ui.main_ui import Ui_MainWindow
 
@@ -111,6 +112,36 @@ class RemoveSelectedDialog(QDialog):
     def reject(self) -> None:
         return super().reject()
 
+
+class FilePreviewWindow(QWidget):
+    """
+    Preview supported file formats
+    """
+    supported_formats = [f'.{f.data().decode()}' for f in QImageReader.supportedImageFormats()] + ['.nef']
+
+    def __init__(self, file_path):
+        super().__init__()
+        layout = QVBoxLayout()
+        self.setWindowTitle(f'{file_path}')
+
+        image = self.getImage(file_path)
+
+        image_widget = QLabel()
+        image_widget.setScaledContents(True)
+
+        image_widget.setPixmap(QPixmap.fromImage(image))
+
+        layout.addWidget(image_widget)
+        self.setLayout(layout)
+        self.resize(500, 400)
+
+    def getImage(self, file_path):
+        if os.path.splitext(file_path)[-1].lower() in FilePreviewWindow.supported_formats:
+            return QImage(file_path)
+
+        return QImage()
+
+
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         """
@@ -149,7 +180,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.button_remove_selected.clicked.connect(self.onButtonRemoveSelectedClicked)
         self.button_remove_selected.setEnabled(False)
 
+        self.button_file_preview.clicked.connect(self.onButtonFilePreviewClicked)
+        self.button_file_preview.setEnabled(False)
+
         self.progressbar_hashes.setVisible(False)
+
+        self.preview_windows = []
 
     def onButtonPathAddClicked(self):
         """
@@ -232,6 +268,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.hashes.pop(file_hash)
 
             self.update_duplicate_info()
+
+
+    def onButtonFilePreviewClicked(self):
+        """
+        Preview selected file
+        """
+        selected = self.tree_duplicates.selectedItems()[0].text(0)
+        self.preview_windows.append(FilePreviewWindow(selected))
+        self.preview_windows[-1].show()
+
+    def closeEvent(self, event):
+        """
+        Close all preview windows on close
+        """
+        for window in self.preview_windows:
+            window.close()
+        return super().closeEvent(event)
 
     def getCandidates(self):
         """
@@ -319,8 +372,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if num_selected == 0:
             self.button_select_same.setEnabled(False)
         elif num_selected == 1:
-            basename = os.path.basename(os.path.dirname(self.tree_duplicates.selectedItems()[0].text(0)))
+            item = self.tree_duplicates.selectedItems()[0]
+            file_path = item.text(0)
+            basename = os.path.basename(os.path.dirname(file_path))
             self.button_select_same.setEnabled(basename != '')
+
+            if item.parent():
+                preview_supported = os.path.splitext(file_path)[-1].lower() in FilePreviewWindow.supported_formats
+                self.button_file_preview.setEnabled(preview_supported)
+            else:
+                self.button_file_preview.setEnabled(False)
         else:
             # Enable button_select_same when all files are in the same directory
             parent_dirs = []

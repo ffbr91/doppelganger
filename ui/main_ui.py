@@ -164,6 +164,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addItem(self.verticalSpacer_2)
 
+        self.button_file_preview = QPushButton(self.widget_duplicates)
+        self.button_file_preview.setObjectName(u"button_file_preview")
+
+        self.verticalLayout_6.addWidget(self.button_file_preview)
+
         self.button_select_same = QPushButton(self.widget_duplicates)
         self.button_select_same.setObjectName(u"button_select_same")
 
@@ -244,6 +249,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Duplicates", None))
         ___qtreewidgetitem = self.tree_duplicates.headerItem()
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("MainWindow", u"Size", None));
+        self.button_file_preview.setText(QCoreApplication.translate("MainWindow", u"File preview", None))
         self.button_select_same.setText(QCoreApplication.translate("MainWindow", u"Select same directory", None))
         self.button_remove_selected.setText(QCoreApplication.translate("MainWindow", u"Remove selected", None))
         self.button_find_duplicates.setText(QCoreApplication.translate("MainWindow", u"Find duplicates", None))
