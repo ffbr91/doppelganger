@@ -215,9 +215,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Remove selected files
         """
-        selected = [item.text(0) for item in self.tree_duplicates.selectedItems()]
+        items = self.tree_duplicates.selectedItems()
+        selected = [item.text(0) for item in items]
         if RemoveSelectedDialog(selected).exec():
-            self.button_find_duplicates.click()
+            for item in items:
+                parent = item.parent()
+                file_path = item.text(0)
+                file_hash = [k for k, v in self.hashes.items() if file_path in v][0]
+                self.hashes[file_hash].remove(file_path)
+
+                if parent:
+                    parent.removeChild(item)
+                    if parent.childCount() <= 1:
+                        self.tree_duplicates.takeTopLevelItem(self.tree_duplicates.indexOfTopLevelItem(parent))
+                        self.candidates.remove(self.hashes[file_hash][0])
+                        self.hashes.pop(file_hash)
+
+            self.update_duplicate_info()
 
     def getCandidates(self):
         """
@@ -323,21 +337,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.progressbar_hashes.setVisible(False)
 
         items = []
-
-        number_of_duplicates = 0
-        size_of_duplicates = 0
+        hashes_to_remove = []
 
         # Fill QTreeWidget with duplicates
-        for _, files in self.hashes.items():
+        for file_hash, files in self.hashes.items():
+
+            # Store hashes with only one file and remove them later
             if len(files) == 1:
+                hashes_to_remove.append(file_hash)
                 continue
 
             file_name = os.path.basename(files[0])
             file_size_b = os.path.getsize(files[0])
             file_size_mb = file_size_b / 1000000
-
-            number_of_duplicates = number_of_duplicates + 1
-            size_of_duplicates = size_of_duplicates + file_size_mb
 
             file_item = QTreeWidgetItem([file_name, f'{file_size_mb: .1f} MB'])
             for file_path in files:
@@ -346,14 +358,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             items.append(file_item)
 
+        # Remove hashes with only one file
+        for file_hash in hashes_to_remove:
+            self.candidates.remove(self.hashes[file_hash][0])
+            self.hashes.pop(file_hash)
+
         self.tree_duplicates.insertTopLevelItems(0, items)
         items = [self.tree_duplicates.topLevelItem(i) for i in range(self.tree_duplicates.topLevelItemCount())]
         for item in items:
             item.setExpanded(True)
         self.tree_duplicates.resizeColumnToContents(0)
 
+        self.update_duplicate_info()
+
+    def update_duplicate_info(self):
+        """
+        Calculate duplicate info and update text edits
+        """
+        number_of_duplicates = 0
+        size_of_duplicates = 0
+
+        for _, files in self.hashes.items():
+            file_size_b = os.path.getsize(files[0]) * (len(files) - 1)
+            file_size_mb = file_size_b / 1000000
+
+            number_of_duplicates = number_of_duplicates + (len(files) - 1)
+            size_of_duplicates = size_of_duplicates + file_size_mb
+
         self.edit_num_duplicates.setText(f'{number_of_duplicates}')
         self.edit_size_duplicates.setText(f'{size_of_duplicates: .1f} MB')
+        self.edit_possible_duplicates.setText(f'{len(self.candidates)}')
+
 
     def onFileHasherResult(self, result):
         """
