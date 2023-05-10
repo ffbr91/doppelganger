@@ -235,7 +235,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for root, _, files in os.walk(root_path):
                 for name in files:
                     if extensions:
-                        if not os.path.splitext(name)[1].lower() in extensions:
+                        if not os.path.splitext(name)[1].lower() in extensions.lower():
                             continue
 
                     file_path = os.path.join(root, name)
