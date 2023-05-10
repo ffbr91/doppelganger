@@ -6,9 +6,9 @@ import hashlib
 
 from collections import defaultdict
 
-from PySide6 import QtWidgets
 from PySide6.QtWidgets import (QFileDialog, QInputDialog, QDialog, QDialogButtonBox, QListWidgetItem, QTreeWidgetItem,
-                               QLineEdit, QAbstractItemView, QVBoxLayout, QListWidget, QLabel)
+                               QLineEdit, QAbstractItemView, QVBoxLayout, QListWidget, QLabel, QWidget, QApplication,
+                               QMainWindow)
 from PySide6.QtCore import (Qt, QRunnable, Signal, Slot, QThreadPool, QObject)
 
 from ui.main_ui import Ui_MainWindow
@@ -111,7 +111,7 @@ class RemoveSelectedDialog(QDialog):
     def reject(self) -> None:
         return super().reject()
 
-class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
         """
         Setup MainWindow
@@ -210,7 +210,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             for j in range(self.tree_duplicates.topLevelItem(i).childCount()):
                 child_dir = os.path.dirname(self.tree_duplicates.topLevelItem(i).child(j).text(0))
                 self.tree_duplicates.topLevelItem(i).child(j).setSelected(search_dir == child_dir)
-
 
     def onButtonRemoveSelectedClicked(self):
         """
@@ -376,7 +375,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     window = MainWindow()
     window.show()
