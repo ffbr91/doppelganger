@@ -14,6 +14,8 @@ from PySide6.QtGui import QImage, QPixmap, QImageReader
 
 from ui.main_ui import Ui_MainWindow
 
+VERSION = "1.1"
+
 class FileHasher():
     @staticmethod
     def sha256(file_path):
@@ -157,7 +159,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.candidates = []
 
-        self.setWindowTitle('Doppelganger')
+        self.setWindowTitle(f'Doppelganger {VERSION}')
 
         self.button_path_add.clicked.connect(self.onButtonPathAddClicked)
         self.button_path_remove.clicked.connect(self.onButtonPathRemoveClicked)
